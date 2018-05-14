@@ -1,5 +1,5 @@
 import numpy as np
-from sklearn import model_selection, neighbors
+from sklearn import model_selection, svm
 import pandas as pd
 
 df = pd.read_csv('breast-cancer-wisconsin.data')
@@ -11,7 +11,7 @@ y = np.array(df['class'])
 
 X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=0.2)
 
-clf = neighbors.KNeighborsClassifier(n_jobs=1)
+clf = svm.SVC()
 clf.fit(X_train, y_train)
 
 accuracy = clf.score(X_test, y_test)
