@@ -1,2 +1,3 @@
 # ml-fundamentals
-A series of Python scripts made to explore the vast library of machine learning knowledge. 
+A series of Python scripts made to explore the vast library of supervised and unsupervised machine learning knowledge.
+Created alongside the "Practical Machine Learning" tutorial series by "Sentdex" (https://pythonprogramming.net/).
