@@ -52,7 +52,7 @@ def test_neural_network():
         sess.run(tf.initialize_all_variables())
         for epoch in range(hm_epochs):
             try:
-                saver.restore(sess, "model.ckpt")
+                saver.restore(sess, "lexicon-model.ckpt")
             except Exception as e:
                 print(str(e))
             epoch_loss = 0

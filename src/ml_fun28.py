@@ -65,7 +65,7 @@ def train_neural_network(x):
         while epoch <= hm_epochs:
 
             if epoch != 1:
-                saver.restore(sess, "model.ckpt")
+                saver.restore(sess, "lexicon-model.ckpt")
             epoch_loss = 1
 
             with open('lexicon-2500-2638.pickle', 'rb') as f:
@@ -101,7 +101,7 @@ def train_neural_network(x):
                         batches_run += 1
                         print('Batch run:', batches_run, '/', total_batches, '| Epoch:', epoch, '| Batch Loss:', c, )
 
-            saver.save(sess, "model.ckpt")
+            saver.save(sess, "lexicon-model.ckpt")
             print('Epoch', epoch, 'completed out of', hm_epochs, 'loss:', epoch_loss)
             with open(tf_log, 'a') as f:
                 f.write(str(epoch) + '\n')
@@ -117,7 +117,7 @@ def test_neural_network():
         sess.run(tf.initialize_all_variables())
         for epoch in range(hm_epochs):
             try:
-                saver.restore(sess, "model.ckpt")
+                saver.restore(sess, "lexicon-model.ckpt")
             except Exception as e:
                 print(str(e))
             epoch_loss = 0

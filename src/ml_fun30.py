@@ -1,87 +1,66 @@
 import tensorflow as tf
-import pickle
-import numpy as np
-from nltk.tokenize import word_tokenize
-from nltk.stem import WordNetLemmatizer
+from tensorflow.examples.tutorials.mnist import input_data
+from tensorflow.python.ops import rnn, rnn_cell
 
-lemmatizer = WordNetLemmatizer()
+mnist = input_data.read_data_sets("/tmp/data/", one_hot=True)
 
-n_nodes_hl1 = 500
-n_nodes_hl2 = 500
-
-n_classes = 2
-hm_data = 2000000
-
-batch_size = 32
 hm_epochs = 10
+n_classes = 10
+batch_size = 128
+chunk_size = 28
+n_chunks = 28
+rnn_size = 128
 
-x = tf.placeholder('float')
+x = tf.placeholder('float', [None, n_chunks, chunk_size])
 y = tf.placeholder('float')
 
-current_epoch = tf.Variable(1)
 
-hidden_1_layer = {'f_fum': n_nodes_hl1,
-                  'weight': tf.Variable(tf.random_normal([2638, n_nodes_hl1])),
-                  'bias': tf.Variable(tf.random_normal([n_nodes_hl1]))}
+def recurrent_neural_network(x):
+    layer = {'weights': tf.Variable(tf.random_normal([rnn_size, n_classes])),
+             'biases': tf.Variable(tf.random_normal([n_classes]))}
 
-hidden_2_layer = {'f_fum': n_nodes_hl2,
-                  'weight': tf.Variable(tf.random_normal([n_nodes_hl1, n_nodes_hl2])),
-                  'bias': tf.Variable(tf.random_normal([n_nodes_hl2]))}
+    x = tf.transpose(x, [1, 0, 2])
+    x = tf.reshape(x, [-1, chunk_size])
+    x = tf.split(x, n_chunks, 0)
 
-output_layer = {'f_fum': None,
-                'weight': tf.Variable(tf.random_normal([n_nodes_hl2, n_classes])),
-                'bias': tf.Variable(tf.random_normal([n_classes])), }
+    lstm_cell = rnn_cell.BasicLSTMCell(rnn_size)
+    outputs, states = rnn.static_rnn(lstm_cell, x, dtype=tf.float32)
 
-
-def neural_network_model(data):
-    l1 = tf.add(tf.matmul(data, hidden_1_layer['weight']), hidden_1_layer['bias'])
-    l1 = tf.nn.relu(l1)
-
-    l2 = tf.add(tf.matmul(l1, hidden_2_layer['weight']), hidden_2_layer['bias'])
-    l2 = tf.nn.relu(l2)
-
-    output = tf.matmul(l2, output_layer['weight']) + output_layer['bias']
+    output = tf.matmul(outputs[-1], layer['weights']) + layer['biases']
 
     return output
 
 
-saver = tf.train.Saver()
-
-
-def use_neural_network(input_data):
-    prediction = neural_network_model(x)
-    with open('lexicon-2500-2638.pickle', 'rb') as f:
-        lexicon = pickle.load(f)
+def train_neural_network(x):
+    prediction = recurrent_neural_network(x)
+    # OLD VERSION:
+    # cost = tf.reduce_mean( tf.nn.softmax_cross_entropy_with_logits(prediction,y) )
+    # NEW:
+    cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=prediction, labels=y))
+    optimizer = tf.train.AdamOptimizer().minimize(cost)
 
     with tf.Session() as sess:
-        sess.run(tf.initialize_all_variables())
-        saver.restore(sess, "model.ckpt")
+        # OLD:
+        # sess.run(tf.initialize_all_variables())
+        # NEW:
+        sess.run(tf.global_variables_initializer())
 
-        current_words = word_tokenize(input_data.lower())
-        current_words = [lemmatizer.lemmatize(i) for i in current_words]
+        for epoch in range(hm_epochs):
+            epoch_loss = 0
+            for _ in range(int(mnist.train.num_examples / batch_size)):
+                epoch_x, epoch_y = mnist.train.next_batch(batch_size)
+                epoch_x = epoch_x.reshape((batch_size, n_chunks, chunk_size))
 
-        features = np.zeros(len(lexicon))
+                _, c = sess.run([optimizer, cost], feed_dict={x: epoch_x, y: epoch_y})
+                epoch_loss += c
 
-        for word in current_words:
-            if word.lower() in lexicon:
-                index_value = lexicon.index(word.lower())
-                # OR DO +=1, test both
-                features[index_value] += 1
+            print('Epoch', epoch, 'completed out of', hm_epochs, 'loss:', epoch_loss)
 
-        features = np.array(list(features))
+        correct = tf.equal(tf.argmax(prediction, 1), tf.argmax(y, 1))
 
-        # pos: [1,0] , argmax: 0
-        # neg: [0,1] , argmax: 1
-
-        result = (sess.run(tf.argmax(prediction.eval(feed_dict={x: [features]}), 1)))
-
-        print(prediction.eval(feed_dict={x: [features]}))
-
-        if result[0] == 0:
-            print('Positive:', input_data)
-        elif result[0] == 1:
-            print('Negative:', input_data)
+        accuracy = tf.reduce_mean(tf.cast(correct, 'float'))
+        print('Accuracy:',
+              accuracy.eval({x: mnist.test.images.reshape((-1, n_chunks, chunk_size)), y: mnist.test.labels}))
 
 
-use_neural_network("He's an idiot and a jerk.")
-use_neural_network("This was the best store i've ever seen.")
+train_neural_network(x)
