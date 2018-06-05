@@ -20,7 +20,7 @@ m, b = best_fit_slope_and_intercept(xs, ys)
 
 regression_line = [(m * x) + b for x in xs]
 
-predict_x = 8
+predict_x = 7
 predict_y = (m * predict_x) + b
 
 plt.scatter(xs, ys)
