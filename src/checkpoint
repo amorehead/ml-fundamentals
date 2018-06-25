@@ -1,2 +1,2 @@
-model_checkpoint_path: "/home/alexm/Dropbox/Coding/Programming Languages/Python/Personal Programs/Machine Learning/src/CartPole-374.model"
-all_model_checkpoint_paths: "/home/alexm/Dropbox/Coding/Programming Languages/Python/Personal Programs/Machine Learning/src/CartPole-374.model"
+model_checkpoint_path: "/home/alexm/Dropbox/Coding/Programming Languages/Python/Personal Programs/Machine Learning/src/dogsvscats-0.001-6conv-basic.model"
+all_model_checkpoint_paths: "/home/alexm/Dropbox/Coding/Programming Languages/Python/Personal Programs/Machine Learning/src/dogsvscats-0.001-6conv-basic.model"
